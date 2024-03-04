@@ -12,14 +12,17 @@ export class GeminiAiService {
     );
   }
 
-  async generateResponse(prompt: string) {
-    // For text-only input, use the gemini-pro model
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+  async generateResponse(prompt: string): Promise<string> {
+    try {
+      // For text-only input, use the gemini-pro model
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    console.log(text);
-    return text;
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      return text;
+    } catch (e) {
+      throw new Error(e);
+    }
   }
 }

@@ -2,6 +2,7 @@ import { UseFilters } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Ctx, Message, On, Start, Update } from 'nestjs-telegraf';
 import { TelegrafExceptionFilter } from 'src/common/telegraf-exception.filter';
+import { GeminiAiService } from 'src/gemini-ai/gemini-ai.service';
 import { Scenes, Telegraf } from 'telegraf';
 
 export interface Context extends Scenes.SceneContext {}
@@ -9,21 +10,36 @@ export interface Context extends Scenes.SceneContext {}
 @Update()
 @UseFilters(TelegrafExceptionFilter)
 export class TelegramService extends Telegraf {
-  private _token: string;
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly geminiAiService: GeminiAiService,
+  ) {
     super(config.get('TELEGRAM_BOT_TOKEN'));
-    this._token = config.get('TELEGRAM_BOT_TOKEN');
   }
 
   @Start()
   async onStart(@Ctx() ctx: Context) {
-    await ctx.reply(
-      'Привет, ты в чате с ИИ от google! И я помогу тебе решить любую твою проблему  Напиши, что тебя тревожит:',
-    );
+    try {
+      await ctx.reply(
+        'Привет, ты в чате с ИИ от google! И я помогу решить любую твою проблему.  Напиши, что тебя тревожит:',
+      );
+    } catch (e) {
+      throw new Error(e);
+    }
   }
 
   @On('text')
-  onMessage(@Message('text') text: string) {
-    return text;
+  async onMessage(
+    @Message('text') text: string,
+    @Ctx() ctx: Context,
+  ): Promise<string> {
+    try {
+      //эффект печатания ботом
+      ctx.sendChatAction('typing');
+      const response = await this.geminiAiService.generateResponse(text);
+      return response;
+    } catch (e) {
+      throw new Error(e);
+    }
   }
 }
