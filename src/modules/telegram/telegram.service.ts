@@ -24,7 +24,7 @@ export class TelegramService extends Telegraf {
         'Привет, ты в чате с ИИ от google! И я помогу решить любую твою проблему.  Напиши, что тебя тревожит:',
       );
     } catch (e) {
-      throw new Error(e);
+      return 'Временная ошибка. Повтори запрос через несколько минут.';
     }
   }
 
@@ -39,7 +39,8 @@ export class TelegramService extends Telegraf {
       const response = await this.geminiAiService.generateResponse(text);
       return response;
     } catch (e) {
-      throw new Error(e);
+      return 'АПИ ИИ Gemini работает на бесплатном тарифе и есть ограничения по кол-ву запросов, повтори запрос через минуту.';
+      //throw new Error(e);
     }
   }
 }
